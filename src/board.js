@@ -51,7 +51,6 @@ export default class Board {
     this.updateScore();
     this.scoreEle.innerText = this.score.toString();
     this.mergeScoreEle.innerText = this.mergeScore.toString();
-
     this.bindEle.removeChild(this.boardEle);
     let boardElement = newDiv('gameBoard');
     // set width dynamic
@@ -78,9 +77,9 @@ export default class Board {
           if (posData === undefined) {
             boxEle.classList.add('undefinedBox');
           } else if (isNaN(posData)) {
-            boxEle.classList.add('NaNbox');
+            boxEle.classList.add('NaNBox');
           } else if (posData === Infinity) {
-            boxEle.classList.add('Infbox');
+            boxEle.classList.add('InfBox');
             boxEle.innerText = '∞';
           } else if (posData < 0) {
             boxEle.style.backgroundColor = getColorStr(posData);
@@ -90,7 +89,7 @@ export default class Board {
           }
 
           if (this.newTurnHistoryList.length > 0) {
-            let posSet = this.newTurnHistoryList(this.newTurnHistoryList.length - 1);
+            let posSet = this.newTurnHistoryList[this.newTurnHistoryList.length - 1];
             for (const pos of posSet) {
               if (pos[0] === y && pos[1] === x) {
                 boxEle.style.animationName = 'newBox 0.4s';
@@ -122,6 +121,212 @@ export default class Board {
     }
     this.score = res;
   }
+
+  // 获取一列数据成一个列表 顺序从上往下
+  getCol(x) {
+    let res = []
+    for(let y=0;y<this.height;y++) {
+      res.push(this.arr[y][x])
+    }
+    return res
+  }
+
+  setCol(x, arr) {
+    let res = []
+    for(let y=0;y<this.height;y++) {
+      this.arr[y][x] = arr[y] 
+    }
+  }
+
+  move(dir) {
+    switch (dir) {
+      case 'left':
+        for (let y = 0; y < this.height; y++) {
+          let line = this.arr[y];
+          this.mergeLineLeft(line);
+        }
+        break;
+      case 'right':
+        for (let y = 0; y < this.height; y++) {
+          let line = this.arr[y].reverse();
+          this.mergeLineLeft(line);
+          this.arr[y] = line.reverse();
+        }
+        break;
+      case 'top':
+        for (let x = 0; x < this.width;x++) {
+          let line = this.getCol(x)
+          this.mergeLineLeft(line);
+          this.setCol(x, line)
+        }
+        break;
+      case 'down':
+        for (let x = 0; x < this.width;x++) {
+          let line = this.getCol(x).reverse();
+          this.mergeLineLeft(line);
+          this.setCol(x, reverse(line))
+        }
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  // 两个值是否能够合并
+  isMergeAble(a, b) {
+    if (a === null || b === null) {
+      return false;
+    }
+    if (a === undefined && b === undefined) {
+      return true;
+    }
+    if (isNaN(a) || isNaN(b)) {
+      return false;
+    }
+    if (typeof a === 'number' && typeof b === 'number') {
+      if (Math.abs(a) === Math.abs(b)) {
+        return true;
+      }
+      return false;
+    }
+  }
+
+  merge(a, b) {
+    this.mergeScore++;
+    if (a === undefined && b === undefined) {
+      // 触发所有清除NaN
+      this.clearNaN();
+      this.fxList.push('flash');
+      this.score += 50000;
+      return Infinity;
+    }
+    if (a === Infinity && b === Infinity) {
+      //清除所有null
+      this.score += 1000_0000;
+      this.fxList.push('boom');
+      this.clearValue(null);
+
+      for (let i = 0; i < 10; i++) {
+        this.clearValue(2 ** i);
+        this.clearValue(-(2 ** i));
+      }
+      return null
+    }
+    return a + b
+  }
+
+  clearNaN() {
+    for (let y = 0; y < this.width; y++) {
+      for (let x = 0; x < this.height; x++) {
+        if (isNaN(this.arr[y][x]) && this.arr[y][x] !== undefined) {
+          // if (this.arr[y][x] === value) {
+          this.arr[y][x] = 0;
+        }
+      }
+    }
+  }
+  clearValue(value) {
+    for (let y = 0; y < this.width; y++) {
+      for (let x = 0; x < this.height; x++) {
+        if (this.arr[y][x] === value) {
+          this.arr[y][x] = 0;
+        }
+      }
+    }
+  }
+  mergeLineLeft(line) {
+    for (let i = 0; i < Math.ceil(Math.log2(line.length)); i++) {
+      // for (let x = 0; x < this.width; x++) {
+      for (let x = 0; x < line.length; x++) {
+        const dataX = line[x];
+        if (dataX === null) {
+          continue;
+        }
+        if (dataX === 0) {
+          // 如果当前这个数字是0，则向右侧寻找第一个非零数字并拉过来
+          for (let xi = x + 1; xi < line.length; xi++) {
+            if (line[xi] === null) {
+              break;
+            }
+            if (line[xi] !== 0) {
+              line[x] = line[xi];
+              line[xi] = 0;
+              break;
+            }
+          }
+        } else {
+          for (let xi = x + 1; xi < line.length; xi++) {
+            // 判断一下 如果可以合并就合并数字
+            if (line[xi] === null) {
+              break;
+            }
+            if (line[xi] !== 0) {
+              if (this.isMergeAble(line[xi], line[x])) {
+                line[x] = this.merge(line[xi], line[x]);
+                line[xi] = 0;
+                break;
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  newTurn() {
+    let locList = []; // 先收集所有可以放置的点
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        if (this.arr[y][x] === 0) {
+          locList.push([y, x]);
+        }
+      }
+    }
+    if (locList.length < this.settings.addCount) {
+      this.isGameOver = true;
+    } else {
+      // 选择位置
+      let putLocList = chioce(locList, this.settings.addCount);
+      this.newTurnHistoryList.push(putLocList);
+      for (let loc of putLocList) {
+        this.createNumber(loc[1], loc[0]);
+      }
+    }
+  }
+  // 在x,y 位置生成按规则随机生成的数组
+  createNumber(x, y) {
+
+    if(Math.random() < this.settings.negNumberRate){
+      this.arr[y][x] = -this.settings.initNumber
+      return
+    }
+    if(Math.random() < this.settings.NaNRate){
+      this.arr[y][x] = NaN
+      return
+    }
+    if(Math.random() < this.settings.nullRate){
+      this.arr[y][x] = null
+      return
+    }
+    if(Math.random() < this.settings.undefinedRate){
+      this.arr[y][x] = undefined
+      return
+    }
+    this.arr[y][x] = this.settings.initNumber;
+
+  }
+}
+
+function chioce(arr, count) {
+  let shuffled = arr.slice(0), i = arr.length, min=i-count, temp, index;
+  while (i-- > min) {
+        index = Math.floor((i + 1) * Math.random());
+        temp = shuffled[index];
+        shuffled[index] = shuffled[i];
+        shuffled[i] = temp;
+  }
+  return shuffled.slice(min)
 }
 
 function newDiv(className) {
@@ -137,4 +342,12 @@ function getColorStr(num) {
   }
   let level = Math.log2(Math.abs(num)) * flag;
   return `rgb(${100 + level * 20}, ${255 + level * 10}, ${180 - level * 2})`;
+}
+function reverse(arr) {
+  let res = []
+  for (let i = arr.length -1; i >=0; i--) {
+    res.push(arr[i])
+    
+  }
+  return res
 }

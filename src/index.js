@@ -50,6 +50,38 @@ function startGame() {
       opRight();
     }
   });
+
+  let mouseDownLoc = { x: 0, y: 0 };
+  let mouseUpLoc = { x: 0, y: 0 };
+  gameBoardEle.addEventListener('mousedown', e => {
+    gameBoardEle.style.backgroundColor = 'gray';
+    mouseDownLoc.x = e.screenX;
+    mouseDownLoc.y = e.screenY;
+  });
+
+  gameBoardEle.addEventListener('mouseup', e => {
+    gameBoardEle.style.backgroundColor = 'transparent';
+    mouseUpLoc.x = e.screenX;
+    mouseUpLoc.y = e.screenY;
+    let dx = mouseUpLoc.x - mouseDownLoc.x;
+    let dy = mouseUpLoc.y - mouseDownLoc.y;
+    // 通过绝对值来判断鼠标到底是往哪个方向移动
+    if (Math.abs(dx) > Math.abs(dy)) {
+      // 横移
+      if (dx > 0) {
+        // 向右边
+        opRight();
+      } else {
+        opLeft();
+      }
+    } else {
+      if (dy > 0) {
+        opDown();
+      } else {
+        opUp();
+      }
+    }
+  });
 }
 
 window.onload = function () {
