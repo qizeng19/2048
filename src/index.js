@@ -3,7 +3,6 @@ import './css/index.css';
 import Board from './board';
 
 function startGame() {
-  let mode = document.querySelector('#modeEle').value;
   let gameBoardEle = document.querySelector('.gameRange');
 
   let w = +document.querySelector('#widthEle').value;
@@ -39,7 +38,21 @@ function startGame() {
     b.refresh();
   }
 
-  window.addEventListener('keydown', e => {
+  // 记录鼠标的开始进入和离开的位置来判断是往哪边滑动
+  let mouseDownLoc = { x: 0, y: 0 };
+  let mouseUpLoc = { x: 0, y: 0 };
+
+  window.addEventListener('keydown', handler);
+  gameBoardEle.addEventListener('mousedown', mousedownHandler);
+  gameBoardEle.addEventListener('mouseup', mouseuphandler);
+
+  function mousedownHandler(e) {
+    gameBoardEle.style.backgroundColor = 'gray';
+    mouseDownLoc.x = e.screenX;
+    mouseDownLoc.y = e.screenY;
+  }
+
+  function handler(e) {
     if (e.key === 'ArrowUp') {
       opUp();
     } else if (e.key === 'ArrowDown') {
@@ -49,17 +62,9 @@ function startGame() {
     } else if (e.key === 'ArrowRight') {
       opRight();
     }
-  });
+  }
 
-  let mouseDownLoc = { x: 0, y: 0 };
-  let mouseUpLoc = { x: 0, y: 0 };
-  gameBoardEle.addEventListener('mousedown', e => {
-    gameBoardEle.style.backgroundColor = 'gray';
-    mouseDownLoc.x = e.screenX;
-    mouseDownLoc.y = e.screenY;
-  });
-
-  gameBoardEle.addEventListener('mouseup', e => {
+  function mouseuphandler(e) {
     gameBoardEle.style.backgroundColor = 'transparent';
     mouseUpLoc.x = e.screenX;
     mouseUpLoc.y = e.screenY;
@@ -81,14 +86,21 @@ function startGame() {
         opUp();
       }
     }
-  });
+  }
+
+  return () => {
+    window.removeEventListener('keydown', handler);
+    gameBoardEle.removeEventListener('mousedown', mousedownHandler);
+    gameBoardEle.removeEventListener('mouseup', mouseuphandler);
+  };
 }
 
-window.onload = function () {
-  document.onkeydown = function (e) {
-    e.preventDefault();
-  };
-  document.querySelector('#playEle').addEventListener('click', () => {
-    startGame();
-  });
+document.onkeydown = function (e) {
+  e.preventDefault();
 };
+document.querySelector('#playEle').addEventListener('click', () => {
+  if (window.removeListenner) {
+    window.removeListenner();
+  }
+  window.removeListenner = startGame();
+});

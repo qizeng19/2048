@@ -92,7 +92,8 @@ export default class Board {
             let posSet = this.newTurnHistoryList[this.newTurnHistoryList.length - 1];
             for (const pos of posSet) {
               if (pos[0] === y && pos[1] === x) {
-                boxEle.style.animationName = 'newBox 0.4s';
+                boxEle.style.animationName = 'newBox';
+                boxEle.style.animationDuration = '0.9s';
               }
             }
           }
@@ -124,17 +125,17 @@ export default class Board {
 
   // 获取一列数据成一个列表 顺序从上往下
   getCol(x) {
-    let res = []
-    for(let y=0;y<this.height;y++) {
-      res.push(this.arr[y][x])
+    let res = [];
+    for (let y = 0; y < this.height; y++) {
+      res.push(this.arr[y][x]);
     }
-    return res
+    return res;
   }
 
   setCol(x, arr) {
-    let res = []
-    for(let y=0;y<this.height;y++) {
-      this.arr[y][x] = arr[y] 
+    let res = [];
+    for (let y = 0; y < this.height; y++) {
+      this.arr[y][x] = arr[y];
     }
   }
 
@@ -154,17 +155,17 @@ export default class Board {
         }
         break;
       case 'top':
-        for (let x = 0; x < this.width;x++) {
-          let line = this.getCol(x)
+        for (let x = 0; x < this.width; x++) {
+          let line = this.getCol(x);
           this.mergeLineLeft(line);
-          this.setCol(x, line)
+          this.setCol(x, line);
         }
         break;
       case 'down':
-        for (let x = 0; x < this.width;x++) {
+        for (let x = 0; x < this.width; x++) {
           let line = this.getCol(x).reverse();
           this.mergeLineLeft(line);
-          this.setCol(x, reverse(line))
+          this.setCol(x, line.reverse());
         }
         break;
 
@@ -211,9 +212,9 @@ export default class Board {
         this.clearValue(2 ** i);
         this.clearValue(-(2 ** i));
       }
-      return null
+      return null;
     }
-    return a + b
+    return a + b;
   }
 
   clearNaN() {
@@ -235,9 +236,10 @@ export default class Board {
       }
     }
   }
+  // 这个地方需要多理解一下
   mergeLineLeft(line) {
+    // 这个循环是保证可以进一步合并 比如 224直接合并就成了800 而不是440
     for (let i = 0; i < Math.ceil(Math.log2(line.length)); i++) {
-      // for (let x = 0; x < this.width; x++) {
       for (let x = 0; x < line.length; x++) {
         const dataX = line[x];
         if (dataX === null) {
@@ -296,37 +298,39 @@ export default class Board {
   }
   // 在x,y 位置生成按规则随机生成的数组
   createNumber(x, y) {
-
-    if(Math.random() < this.settings.negNumberRate){
-      this.arr[y][x] = -this.settings.initNumber
-      return
+    if (Math.random() < this.settings.negNumberRate) {
+      this.arr[y][x] = -this.settings.initNumber;
+      return;
     }
-    if(Math.random() < this.settings.NaNRate){
-      this.arr[y][x] = NaN
-      return
+    if (Math.random() < this.settings.NaNRate) {
+      this.arr[y][x] = NaN;
+      return;
     }
-    if(Math.random() < this.settings.nullRate){
-      this.arr[y][x] = null
-      return
+    if (Math.random() < this.settings.nullRate) {
+      this.arr[y][x] = null;
+      return;
     }
-    if(Math.random() < this.settings.undefinedRate){
-      this.arr[y][x] = undefined
-      return
+    if (Math.random() < this.settings.undefinedRate) {
+      this.arr[y][x] = undefined;
+      return;
     }
     this.arr[y][x] = this.settings.initNumber;
-
   }
 }
 
 function chioce(arr, count) {
-  let shuffled = arr.slice(0), i = arr.length, min=i-count, temp, index;
+  let shuffled = arr.slice(0),
+    i = arr.length,
+    min = i - count,
+    temp,
+    index;
   while (i-- > min) {
-        index = Math.floor((i + 1) * Math.random());
-        temp = shuffled[index];
-        shuffled[index] = shuffled[i];
-        shuffled[i] = temp;
+    index = Math.floor((i + 1) * Math.random());
+    temp = shuffled[index];
+    shuffled[index] = shuffled[i];
+    shuffled[i] = temp;
   }
-  return shuffled.slice(min)
+  return shuffled.slice(min);
 }
 
 function newDiv(className) {
@@ -342,12 +346,4 @@ function getColorStr(num) {
   }
   let level = Math.log2(Math.abs(num)) * flag;
   return `rgb(${100 + level * 20}, ${255 + level * 10}, ${180 - level * 2})`;
-}
-function reverse(arr) {
-  let res = []
-  for (let i = arr.length -1; i >=0; i--) {
-    res.push(arr[i])
-    
-  }
-  return res
 }

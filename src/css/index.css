@@ -6,10 +6,10 @@
   box-sizing: border-box;
 }
 @keyframes newBox {
-  from {
+  0% {
     transform: scale(0.2);
   }
-  to {
+  100% {
     transform: scale(1);
   }
 }
@@ -86,8 +86,9 @@
   }
 }
 body main {
-  width: 90%;
+  width: 100%;
   margin: 0 auto;
+  padding: 20px;
   min-height: 100vh;
   background-color: lightslategray;
 }
@@ -170,9 +171,15 @@ body main .gameBoard .line {
 .clearFloat {
   float: none;
 }
+.jumbotron {
+  padding: 20px;
+}
 .jumbotron p {
   margin-bottom: 15px;
   font-size: 21px;
   font-weight: 200;
 }
-/*# sourceMappingURL=index.css.map */
+label input {
+  display: block;
+  margin: 20px;
+}
